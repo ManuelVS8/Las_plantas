@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>La Planta - Partes de la planta</title>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/icono.ico">
+    <style>
+        /* ====== Reset & base ====== */
+        * { box-sizing: border-box; margin:0; padding:0; }
+        :root{
+            --blue:#001DFF;
+            --blue-dark:#04032B; /* Azul oscuro solicitado para títulos */
+            --blue-700:#1a3a5f;
+            --blue-600:#254fba;
+            --orange:#f59e42;
+            --orange-700:#e67e22;
+            --bg-grad-1:#1a3a5f;
+            --bg-grad-2:#0d2340;
+            --white:#ffffff;
+            --green:#2ecc71;
+            --red:#e74c3c;
+            --panel:#E8EAFF;
+        }
+        body{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+            min-height:100vh; 
+            display:flex; 
+            justify-content:center; 
+            align-items: flex-start; /* Ajustado al borde superior como se solicitó */
+            color:#333; 
+            padding: 40px 10px 20px 10px; /* Marco estético superior */
+        }
+        .game-container{
+            background:var(--white); border-radius:16px; box-shadow:0 12px 24px rgba(0,0,0,.12);
+            padding:1.2rem; max-width:980px; width:100%; min-height:640px; position:relative; overflow:hidden;
+            display:flex; flex-direction:column;
+        }
+        header{ text-align:center; margin-bottom:.8rem; margin-top:2rem; }
+        h1{ color:var(--blue-dark); font-size:clamp(2rem,5.2vw,3.1rem); font-weight:900; letter-spacing:.5px; }
+        .subtitle{ color:var(--blue-700); font-size:clamp(1rem,3.5vw,1.25rem); margin-top:.25rem; }
+        .highlight-keyword{ color:var(--orange); font-weight:800; }
+
+        /* Buttons */
+        .btn{ color:#fff; border:none; padding:.75rem 1.2rem; border-radius:10px; cursor:pointer; font-weight:800;
+            transition:transform .08s ease, box-shadow .2s ease, background-color .25s ease; min-width:140px; height:48px;
+            display:inline-flex; align-items:center; justify-content:center; font-size: 1rem; }
+        .btn:hover{ transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.12); }
+        .btn:active{ transform:translateY(0); }
+        .btn-primary{ background:var(--orange); }
+        .btn-primary:hover{ background:var(--orange-700); color:#fff; }
+
+        .screen{ display:none; animation:fadeIn .35s ease; flex-direction: column; flex:1;}
+        .screen.active{ display:flex; }
+        @keyframes fadeIn{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+
+        .game-info{ display:flex; gap:.6rem; align-items:center; justify-content:space-between; margin:.4rem 0 1rem; flex-wrap:wrap; }
+        .timer{ font-weight:900; color:var(--blue-700); font-size:clamp(.95rem,2.3vw,1.15rem); }
+        .progress-bar{ flex:1; height:10px; background:#e6f2ff; border-radius:999px; overflow:hidden; }
+        .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--orange) 0%, var(--orange-700) 100%); transition:width .3s ease; }
+
+        .start-content{ display:flex; flex-direction:column; justify-content:center; align-items:center; flex:1; gap:1rem; padding:1rem; }
+        .advice-box{ background:var(--panel); border-left:4px solid var(--blue-700); padding:1rem 1.2rem; border-radius:12px;
+            color:var(--blue-700); max-width:760px; text-align:center; font-size:clamp(1rem,3vw,1.15rem); }
+        .start-image{ max-width: 300px; width: 100%; margin: 0 auto; }
+        
+        .mute-btn{ position:absolute; top:.8rem; right:1rem; background:var(--orange); color:#fff; border:2px solid #fff; width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; z-index:20; }
+
+        /* Panel de Juego */
+        .board{ display:grid; grid-template-columns:1fr; gap:.8rem; align-items:start; }
+        .panel{ background:#f8fbff; border:2px solid #d3e2ff; border-radius:12px; padding:.7rem .9rem; display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
+        
+        .word-display-container{ display:flex; align-items:center; justify-content:center; gap:0.5rem; flex:1; }
+        .word-display{ font-size:clamp(1.5rem, 5.5vw, 2.4rem); font-weight:900; color:var(--blue-dark); text-align:center; line-height: 1.2; }
+        .btn-play-word{ background:var(--blue-600); color:#fff; border:none; border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background-color .2s; flex-shrink: 0; }
+        .btn-play-word svg{ width:26px; height:26px; }
+
+        .stage{ background:#fff; border-radius:12px; border:2px solid #e6f2ff; padding:.6rem; position: relative;}
+        .img-wrap{ position:relative; width:100%; max-width:820px; margin:0 auto; }
+        .img-wrap img{ display:block; width:100%; height:auto; border-radius:10px; user-select:none; }
+
+        .marker{
+            position:absolute;
+            background:#ffffff;
+            border: 3px solid #000;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .marker.flash-green { background-color: #2ecc71 !important; border-color: #2ecc71 !important; }
+        .marker.flash-red { background-color: #e74c3c !important; border-color: #e74c3c !important; }
+
+        .shake { animation: shakeAnim 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Pantalla Final */
+        .results{ display:flex; flex-direction:column; align-items:center; gap:.6rem; text-align:center; flex:1; justify-content:center;}
+        .final-title{ color:var(--blue-dark); font-weight:900; }
+        .big-score{ font-size:clamp(2.2rem,6vw,3.4rem); color:var(--blue-600); font-weight:900; }
+        #trophyBox { display: none; font-size: 5rem; animation: bounce 1s ease infinite; }
+        @keyframes bounce { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-15px); } }
+        
+        .school-logo { display: block; width: 160px; margin-top: 0.8rem; }
+        .confetti{ position:fixed; width:10px; height:10px; border-radius:50%; animation: confetti-fall 3s linear forwards; z-index:999; }
+        @keyframes confetti-fall{ 0%{ transform:translate(0, -20px); opacity:1;} 100%{ transform:translate(var(--tx), var(--ty)); opacity:0; } }
+
+        @media (min-width:900px){ .board{ grid-template-columns: 420px 1fr; } .panel{ order:1; } .stage{ order:2; } }
+    </style>
+</head>
+<body>
+<div class="game-container" id="mainContainer">
+    <button class="mute-btn" id="muteBtn">🔊</button>
+
+    <section class="screen active" id="startScreen">
+        <header>
+            <h1>La planta</h1>
+            <div class="subtitle">Conoce las partes de una planta y su función</div>
+        </header>
+        <div class="start-content">
+            <div class="advice-box">
+                <span>Estudia las <span class="highlight-keyword">partes de la planta</span> para entender su funcionamiento e identifica dónde se encuentran.</span>
+                <strong style="display:block; margin-top:0.5rem;">¡Ánimo!</strong>
+            </div>
+            <button class="btn btn-primary" id="playBtn">Comenzar</button>
+            <img class="start-image" src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Ni%C3%B1os.png" alt="Niños">
+        </div>
+    </section>
+
+    <section class="screen" id="game1Screen">
+        <header><h1>Identifica las partes de la planta</h1></header>
+        <div class="game-info">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill1"></div></div>
+            <div class="timer" id="globalTimer">00:00.0</div>
+        </div>
+        <div class="board">
+            <div class="panel">
+                <div class="word-display-container">
+                    <div class="word-display" id="wordDisplay1">—</div>
+                    <button class="btn-play-word" id="playWordBtn1">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="stage"><div class="img-wrap" id="imgWrap1"><img id="plantImg1" src="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Planta2.png"></div></div>
+        </div>
+    </section>
+
+    <section class="screen" id="game2Screen">
+        <header><h1>¿A qué parte se refieren estas afirmaciones?</h1></header>
+        <div class="game-info"><div class="progress-bar"><div class="progress-fill" id="progressFill2"></div></div></div>
+        <div class="board">
+            <div class="panel">
+                <div class="word-display-container">
+                    <div class="word-display" id="wordDisplay2">—</div>
+                    <button class="btn-play-word" id="playWordBtn2">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="stage"><div class="img-wrap" id="imgWrap2"><img id="plantImg2" src="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Planta2.png"></div></div>
+        </div>
+    </section>
+
+    <section class="screen" id="finalScreen">
+        <header><h1 class="final-title">Partes de la planta</h1></header>
+        <div class="results">
+            <div id="trophyBox">🏆</div>
+            <div class="score-title">Puntuación:</div>
+            <div class="big-score" id="finalScore">0</div>
+            <div class="final-time">Tiempo: <span id="finalTime">00:00.0</span></div>
+            <div id="finalMsg" class="subtitle"></div>
+            <button class="btn btn-primary" id="backToMenuBtn" style="background:var(--orange);">Volver al menú</button>
+            <span class="credit">Creado por Manuel J. Ventura</span>
+            <img class="school-logo" src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Siurot.png">
+        </div>
+    </section>
+</div>
+
+<script>
+    const ORIGINAL_W = 928, ORIGINAL_H = 1074;
+    let isMuted = false, audioUnlocked = false, startTime = 0, timerInterval = null, elapsed = 0;
+    let attempts1 = 0, attempts2 = 0, currentAudio = null, audioTimeout = null;
+
+    const audioObjs = {
+        correct: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Correcto.mp3'),
+        error: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Error.mp3'),
+        tap: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Tap.mp3'),
+        victory: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Termin%C3%A9.mp3'),
+        completed: new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Completado.mp3')
+    };
+
+    const coords = {
+        raiz: { x1: 278, y1: 883, x2: 444, y2: 1035 },
+        tallo: { x1: 568, y1: 596, x2: 734, y2: 749 },
+        hoja: { x1: 66, y1: 156, x2: 233, y2: 309 }
+    };
+
+    const game1Data = [
+        { name: 'Raíz', ...coords.raiz, audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/RaizD.mp3' },
+        { name: 'Tallo', ...coords.tallo, audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/TalloD.mp3' },
+        { name: 'Hoja', ...coords.hoja, audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/HojaD.mp3' }
+    ];
+
+    const game2Data = [
+        { part: 'Raíz', ...coords.raiz, text: 'Absorbe agua y otras sustancias del suelo', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Raiz1.mp3' },
+        { part: 'Raíz', ...coords.raiz, text: 'Esta parte suele estar bajo tierra', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Raiz2.mp3' },
+        { part: 'Raíz', ...coords.raiz, text: 'Sujeta la planta al suelo', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Raiz3.mp3' },
+        { part: 'Tallo', ...coords.tallo, text: 'De esta parte salen las ramas y las hojas', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Tallo1.mp3' },
+        { part: 'Tallo', ...coords.tallo, text: 'Sujeta la planta para que se mantenga rígida', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Tallo2.mp3' },
+        { part: 'Tallo', ...coords.tallo, text: 'Transporta sustancias por su interior', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Tallo3.mp3' },
+        { part: 'Hoja', ...coords.hoja, text: 'Esta parte se encarga de la respiración', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Hoja1.mp3' },
+        { part: 'Hoja', ...coords.hoja, text: 'Captan la luz del sol', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Hoja2.mp3' },
+        { part: 'Hoja', ...coords.hoja, text: 'Fabrican el alimento de la planta', audio: 'https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/Planta1/Hoja3.mp3' }
+    ];
+
+    function unlockAudio() { if(audioUnlocked) return; const c=new(window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(); const g=c.createGain(); o.connect(g); g.connect(c.destination); g.gain.value=0.0001; o.start(); o.stop(c.currentTime+0.01); audioUnlocked=true; }
+    function playSnd(t) { if(!isMuted) { audioObjs[t].currentTime=0; audioObjs[t].play(); } }
+    function playTaskAudio(url, delay=500) {
+        if(isMuted) return;
+        if(audioTimeout) clearTimeout(audioTimeout);
+        if(currentAudio) { currentAudio.pause(); currentAudio.currentTime=0; }
+        audioTimeout = setTimeout(() => { currentAudio = new Audio(url); currentAudio.play(); }, delay);
+    }
+
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function updateTimer() {
+        const d = (Date.now() - startTime)/1000; elapsed = d;
+        const m = Math.floor(d/60).toString().padStart(2,'0'), s = Math.floor(d%60).toString().padStart(2,'0'), ms = Math.round((d%1)*10);
+        document.getElementById('globalTimer').textContent = `${m}:${s}.${ms}`;
+    }
+
+    let q1 = [], idx1 = 0;
+    function initGame1() {
+        attempts1 = 0; idx1 = 0; q1 = [...game1Data].sort(()=>Math.random()-0.5);
+        if(!timerInterval) { startTime = Date.now(); timerInterval = setInterval(updateTimer, 100); }
+        renderMarkers('imgWrap1', 'plantImg1', onMarker1); nextQ1();
+    }
+    function nextQ1() {
+        if(idx1 >= q1.length) { setTimeout(initGame2, 600); return; }
+        document.getElementById('wordDisplay1').textContent = q1[idx1].name;
+        document.getElementById('progressFill1').style.width = ((idx1/12)*100)+'%';
+        playTaskAudio(q1[idx1].audio);
+    }
+    function onMarker1(name, el) {
+        attempts1++;
+        if(name === q1[idx1].name) { el.classList.add('flash-green'); playSnd('correct'); setTimeout(()=>{el.classList.remove('flash-green'); idx1++; nextQ1();}, 200); }
+        else { el.classList.add('flash-red'); document.getElementById('mainContainer').classList.add('shake'); playSnd('error'); setTimeout(()=>{el.classList.remove('flash-red'); document.getElementById('mainContainer').classList.remove('shake');}, 200); }
+    }
+
+    let q2 = [], idx2 = 0;
+    function initGame2() {
+        showScreen('game2Screen'); attempts2 = 0; idx2 = 0; q2 = [...game2Data].sort(()=>Math.random()-0.5);
+        renderMarkers('imgWrap2', 'plantImg2', onMarker2); nextQ2();
+    }
+    function nextQ2() {
+        if(idx2 >= q2.length) { finish(); return; }
+        document.getElementById('wordDisplay2').textContent = q2[idx2].text;
+        document.getElementById('progressFill2').style.width = (((3+idx2)/12)*100)+'%';
+        playTaskAudio(q2[idx2].audio);
+    }
+    function onMarker2(name, el) {
+        attempts2++;
+        if(name === q2[idx2].part) { el.classList.add('flash-green'); playSnd('correct'); setTimeout(()=>{el.classList.remove('flash-green'); idx2++; nextQ2();}, 200); }
+        else { el.classList.add('flash-red'); document.getElementById('mainContainer').classList.add('shake'); playSnd('error'); setTimeout(()=>{el.classList.remove('flash-red'); document.getElementById('mainContainer').classList.remove('shake');}, 200); }
+    }
+
+    function renderMarkers(wrapId, imgId, callback) {
+        const wrap = document.getElementById(wrapId), img = document.getElementById(imgId);
+        wrap.querySelectorAll('.marker').forEach(m=>m.remove());
+        const rect = img.getBoundingClientRect(), sx = rect.width/ORIGINAL_W, sy = rect.height/ORIGINAL_H;
+        game1Data.forEach(t => {
+            const m = document.createElement('div'); m.className = 'marker';
+            m.style.left = (t.x1*sx)+'px'; m.style.top = (t.y1*sy)+'px';
+            m.style.width = ((t.x2-t.x1)*sx)+'px'; m.style.height = ((t.y2-t.y1)*sy)+'px';
+            m.onclick = () => callback(t.name, m); wrap.appendChild(m);
+        });
+    }
+
+    function finish() {
+        clearInterval(timerInterval);
+        const score = Math.round((((3/attempts1)+(9/attempts2))/2)*100);
+        document.getElementById('finalScore').textContent = score;
+        document.getElementById('finalTime').textContent = document.getElementById('globalTimer').textContent;
+        if(score >= 100) { document.getElementById('trophyBox').style.display='block'; document.getElementById('finalMsg').textContent='¡Enhorabuena, puntuación máxima!'; playSnd('victory'); conf(); }
+        else { document.getElementById('trophyBox').style.display='none'; document.getElementById('finalMsg').textContent='¡Buen trabajo! Sigue practicando'; playSnd('completed'); }
+        showScreen('finalScreen');
+    }
+
+    function conf() {
+        for(let i=0; i<80; i++) {
+            const c = document.createElement('div'); c.className='confetti'; c.style.left = Math.random()*100+'vw';
+            c.style.backgroundColor=`hsl(${Math.random()*360},70%,50%)`;
+            c.style.setProperty('--tx', (Math.random()-0.5)*300+'px'); c.style.setProperty('--ty', '110vh');
+            document.body.appendChild(c); setTimeout(()=>c.remove(), 3000);
+        }
+    }
+
+    document.getElementById('playBtn').onclick = () => { unlockAudio(); playSnd('tap'); showScreen('game1Screen'); initGame1(); };
+    document.getElementById('playWordBtn1').onclick = () => playTaskAudio(q1[idx1].audio, 0);
+    document.getElementById('playWordBtn2').onclick = () => playTaskAudio(q2[idx2].audio, 0);
+    document.getElementById('backToMenuBtn').onclick = () => { playSnd('tap'); location.reload(); };
+    document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; document.getElementById('muteBtn').textContent = isMuted?'🔇':'🔊'; if(currentAudio) currentAudio.pause(); };
+    window.onresize = () => { 
+        if(document.getElementById('game1Screen').classList.contains('active')) renderMarkers('imgWrap1', 'plantImg1', onMarker1);
+        if(document.getElementById('game2Screen').classList.contains('active')) renderMarkers('imgWrap2', 'plantImg2', onMarker2);
+    };
+</script>
+</body>
+</html>
